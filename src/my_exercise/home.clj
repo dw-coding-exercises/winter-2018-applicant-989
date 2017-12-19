@@ -132,7 +132,10 @@
      [:button {:type "submit"} "Search"]]]])
 
 (defn page [request]
+  (prn :bam-home!!!)
   (html5
    (header request)
    (instructions request)
    (address-form request)))
+
+
