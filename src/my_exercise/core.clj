@@ -3,13 +3,12 @@
             [compojure.route :as route]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.reload :refer [wrap-reload]]
-            ;;[ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
-            ;;[ring.middleware.session :refer [wrap-session]]
-            [my-exercise.home :as home]))
+            [my-exercise.home :as home]
+            [my-exercise.ocd-search :refer [ocd-search]]))
 
 (defroutes app
            (GET "/" [] home/page)
-           (POST "/search" [] home/ocd-search)
+           (POST "/search" [] ocd-search)
            (route/resources "/")
            (route/not-found "Not found!!"))
 

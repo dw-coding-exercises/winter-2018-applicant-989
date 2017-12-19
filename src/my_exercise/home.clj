@@ -1,7 +1,8 @@
 (ns my-exercise.home
   (:require [hiccup.page :refer [html5]]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
-            [my-exercise.us-state :as us-state]))
+            [my-exercise.utility :as util]))
+
 
 (defn header [_]
   [:head
@@ -121,7 +122,7 @@
      [:select {:id "state-field"
                :name "state"}
       [:option ""]
-      (for [state us-state/postal-abbreviations]
+      (for [state util/postal-state-abbreviations]
         [:option {:value state} state])]
      [:label {:for "zip-field"} "ZIP:"]
      [:input {:id "zip-field"
