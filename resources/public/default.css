@@ -6,7 +6,7 @@ form {
   width: 600px;
   padding: 1em;
   border: 1px solid #CCC;
-  border-radius: 1em;
+  border-radius: 4px;
 }
 
 form div + div {
@@ -16,6 +16,7 @@ form div + div {
 label {
   display: inline-block;
   text-align: right;
+  color: #00f;
   margin-right: .3em;
   margin-left: 1em;
 }
@@ -25,10 +26,21 @@ label:first-of-type {
   margin-left: 0;
 }
 
+label.dtime {
+  width: 128px;
+  text-align: left;
+  margin-left: 1em;
+}
+label.descr {
+  width: 600px;
+  text-align: left;
+  margin-left: 1em;
+}
+
 input {
   font: 1em sans-serif;
   box-sizing: border-box;
-  border: 1px solid #999;
+  border: 2px solid #999;
 }
 
 input:focus {
@@ -36,7 +48,7 @@ input:focus {
 }
 
 .button {
-  padding-left: 90px;
+  padding-left: 100px;
 }
 
 button {

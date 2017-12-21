@@ -2,62 +2,53 @@
   (:require [clojure.pprint :as pp]
             [hiccup.page :refer [html5]]
             [my-exercise.utility :as util]
+            [my-exercise.geoservice :as geo]
             [clojure.string :as str]))
 
-(declare search-to-ocd-ids
+(declare search-results-header
+         search-to-ocd-ids
          turbo-vote-elections-url)
 
-(defn ocd-search [request]
-  (prn :bam-search!)
-  (let [{:keys [cookies params]} request
-        search (select-keys params [:street :street-2 :city :state :zip])]
-    (prn :svc-params search)
-    (if-let [ocd-ids (search-to-ocd-ids search)]
-      (let [turbo (turbo-vote-elections-url ocd-ids)
-            elections (util/edn-response-to-map
-                        (util/svc-get-url
-                          turbo))]
-        (do (prn :turbo turbo)
-            (prn :elections elections)
-            (html5 (str elections))))
-      (html5 "No elections upcoming"))
-    #_ (html5
-      (if (nil? ));; (header request)
-      (format "<h1>Hello %s search</h1>"
-              (str/join ", " [street city zip])))))
-
-(def or-st-dist "https://api.turbovote.org/elections/upcoming?district-divisions=ocd-division/country:us/state:or")
-(def va-st-dist "https://api.turbovote.org/elections/upcoming?district-divisions=ocd-division/country:us/state:va/place:chilhowie")
-
-
-(def confetti {:street "1207 Horsehoe Bend Rd"
-               :city "Chilhowie"
-               :state "VA"
-               :zip "24319"})
+(defn ocd-search-request-handler [request]
+  ;; todo make prettier
+  ;; todo re-iterate search address and with cleaned data
+  ;; todo support drill-down into election details
+  (html5
+    (util/html-header request)
+    (if-let [ocd-ids (search-to-ocd-ids
+                       (select-keys (:params request)
+                                    [:street :street-2 :city :state :zip]))]
+      (let [turbo-url (turbo-vote-elections-url ocd-ids)]
+        (let [elections (util/get-service-data turbo-url)]
+          (if (seq elections)
+            [:div
+             [:h3 "Upcoming Elections"]
+             (for [{:keys [date description]} elections]
+               [:div
+                [:label.dtime (.format (java.text.SimpleDateFormat. "dd-MMM-yyyy") date)]
+                [:label.dtime (.format (java.text.SimpleDateFormat. "hh:mm a zzz") date)]
+                [:label.descr description]])]
+            [:h3 "No elections are upcoming."])))
+      [:h3 "Not enough information by which to search."])))
 
 (defn turbo-vote-elections-url [ocd-ids]
+  ;; todo generalize as we learn more about the TurboVote API
   (pp/cl-format nil "https://api.turbovote.org/elections/upcoming?district-divisions=~{~a~^,~}" ocd-ids))
 
-(defn search-to-ocd-ids [{:keys [street street-2 city state zip]}]
-  (letfn[(build-ocd-id [state place]
-           ;; re the following, see http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm
-            (pp/cl-format nil "ocd-division/country:us/state:~(~a~)~@[/place:~(~a~)~]"
-                                      state place))]
-    (when (not (str/blank? state))
-      (remove nil?
-            [(build-ocd-id state nil)
-             (when (not (str/blank? city))
-              (build-ocd-id state city))]))))
-
-#_ (pp/cl-format nil "https://api.turbovote.org/elections/upcoming?district-divisions=~{~a~^,~}"
-                 (search-to-ocd-ids confetti))
-
-#_ (util/edn-response-to-map (util/svc-get-url va-st-dist))
-#_(let [raw (util/svc-get-url or-st-dist)
-        pbr (java.io.PushbackReader.
-              (clojure.java.io/reader raw))]
-    (edn/read pbr))
-
-
+(defn search-to-ocd-ids [search]
+  (letfn [(build-ocd-id [{:keys [state county city]}]
+            ;; For the cl-format DSL, see http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm,
+            ;; especially the conditional formatting.
+            (pp/cl-format nil "ocd-division/country:us/state:~(~a~)~@[/county:~(~a~)~]~@[/place:~(~a~)~]"
+                          state county city))]
+    (when-let [verified (geo/election-addr-verified search)]
+      ;; todo make which admin levels are searched user-specifiable
+      (->> [[:state]
+            [:state :county]
+            [:state :city]
+            [:state :county :city]]
+           (map #(select-keys verified %))
+           (remove #(some str/blank? (vals %)))
+           (map build-ocd-id)))))
 
 

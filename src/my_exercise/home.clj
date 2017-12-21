@@ -3,15 +3,6 @@
             [ring.util.anti-forgery :refer [anti-forgery-field]]
             [my-exercise.utility :as util]))
 
-
-(defn header [_]
-  [:head
-   [:meta {:charset "UTF-8"}]
-   [:meta {:name "viewport"
-           :content "width=device-width, initial-scale=1.0, maximum-scale=1.0"}]
-   [:title "Find my next election"]
-   [:link {:rel "stylesheet" :href "default.css"}]])
-
 (defn getting-started [_]
   [:div {:class "getting-started"}
    [:h1 "Getting started"]
@@ -44,7 +35,7 @@
 
 (defn ocd-id-explainer [_]
   [:div {:class "ocd-id-explainer"}
-   [:h2 "All about OCD-IDs"]
+   [:h1 "All about OCD-IDs"]
    [:ul
     [:li "OCD-IDs are "
      [:a {:href "http://opencivicdata.readthedocs.io/en/latest/data/datatypes.html"}
@@ -104,27 +95,30 @@
     (anti-forgery-field)
     [:p "Enter the address where you are registered to vote"]
     [:div
-     [:label {:for "street-field"} "Street:"]
+     [:label {:for "street-field"} "Street 1"]
      [:input {:id "street-field"
               :type "text"
               :name "street"}]]
     [:div
-     [:label {:for "street-2-field"} "Street 2:"]
+     [:label {:for "street-2-field"} "Street 2"]
      [:input {:id "street-2-field"
               :type "text"
               :name "street-2"}]]
     [:div
-     [:label {:for "city-field"} "City:"]
+     [:label {:for "city-field"} "City"]
      [:input {:id "city-field"
               :type "text"
+              ;;:value "Chilhowie"
               :name "city"}]
-     [:label {:for "state-field"} "State:"]
+     [:label {:for "state-field"} "State"]
      [:select {:id "state-field"
                :name "state"}
       [:option ""]
       (for [state util/postal-state-abbreviations]
-        [:option {:value state} state])]
-     [:label {:for "zip-field"} "ZIP:"]
+        [:option {:value  state
+                  ;; :selected (= state "VA")
+                  } state])]
+     [:label {:for "zip-field"} "ZIP"]
      [:input {:id "zip-field"
               :type "text"
               :name "zip"
@@ -133,9 +127,8 @@
      [:button {:type "submit"} "Search"]]]])
 
 (defn page [request]
-  (prn :bam-home!!!)
   (html5
-   (header request)
+   (util/html-header request)
    (instructions request)
    (address-form request)))
 
